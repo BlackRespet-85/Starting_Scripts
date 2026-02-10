@@ -1,0 +1,84 @@
+#!/bin/bash
+
+#ESQUEMA DE COLORES
+VERDE='\033[0;32m'
+ROJO='\033[0;31m'
+AMARILLO='\033[1;33m'
+AZUL='\033[0;34m'
+NC='\033[0m'
+
+#Bienbenida
+
+#Pregunta Nombre de Usuario
+read -p "¿Como se llamará el nuevo usuario?: " user
+
+#Preguntas de home
+read -p "¿Desea crear un directorio home para este usuario? [S/n]: " home_create
+
+#pasar S/N por filtro de escritura
+home_create=${home_create,,}
+
+#Boorleano de eleccion de home_create
+if [[ "$home_create" == "n" || "$home_create" == "no" ]]; then
+	home_option="no"
+	home_route="-M"
+else
+	read -p "¿Donde desea que este usuario tenga su home? La ruta por defecto sera /home: " home_route
+	if [ -z "$home_route" ]; then
+		echo -e "No se ha seleccionado ninguna ruta, se asume como directorio /home"
+		home_option="/home/${user}"
+		home_route="-m -d /home/${user}"
+	else
+		home_option=${home_route}
+		home_route="-m -d ${home_route}"
+	fi
+fi
+
+#Pregunta de Emulador de terminal
+read -p "¿Desea que este usuario tenga un shell avanzado? [s/N]:" shell
+
+#pasar S/N por filtro de escritura
+shell=${shell,,}
+
+#Boorleano de eleccion de shell
+if [[ "$shell" == "s" || "$shell" == "si" ]]; then
+	shell="/bin/bash"
+	shell_option=${shell}
+else
+	shell="/bin/sh"
+	shell_option=${shell}
+fi
+
+#Password
+read -p "Escriba la contraseña para el usuario: " password
+echo ""
+
+#Montaje del comando
+echo -e "${AMARILLO}SU USUARIO TENDRA LAS SIGUIENTES CARATERISTICAS${NC}"
+echo -e "Nombre de Usuario: ${user}"
+echo -e "Home: ${home_option}"
+echo -e "Shell Avanzado: ${shell_option}"
+echo -e "Contraseña: ${password}"
+
+read -p "¿Estos datos entan correctos? [S/n]: " confirmacion
+
+#Boorleano de confirmacion
+if [[ "$confirmacion" == "n" || "$confirmacion" == "no" ]]; then
+	echo -e "OPERACION CANCELADA"
+	exit 0
+fi
+
+#Ejecucion del comando
+echo -e "AÑADIENDO USUARIO"
+sudo useradd ${home_route} -s ${shell} ${user} 
+sudo passwd ${user}
+
+#Resolucion del comando
+echo " "
+echo -e "${AMARILLO}USUARIO AÑADIDO${NC}"
+
+#Registro de Usos
+echo -e  "${AMARILLO}ESTA PETICION HA SIDO REGRISTADA POR EL SISTEMA${NC}"
+date >> /home/batoi/Documentos/regristo_act.txt 
+echo "USUARIO: $USER OPERACION: Creacion_de_usuario" >> /home/batoi/Documentos/regristo_act.txt
+
